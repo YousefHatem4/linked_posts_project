@@ -6,22 +6,24 @@ import {
   TextField,
   Typography,
   Box,
-  CircularProgress,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import { useFormik } from "formik";
-import { useDispatch, useSelector } from "react-redux";
-import { State } from "../_redux/store";
-import { setError, setLoading, setToken } from "../_redux/authSlice";
 
-export default function Login() {
-  let isLoading = useSelector((store: State) => store.authReducer.isLoading);
-
-  let dispatch = useDispatch();
-
-  async function login(values: { email: string; password: string }) {
-    dispatch(setLoading());
+export default function Register() {
+  async function register(values: {
+    name: string;
+    email: string;
+    password: string;
+    rePassword: string;
+    dateOfBirth: string;
+    gender: string;
+  }) {
     let response = await fetch(
-      `https://linked-posts.routemisr.com/users/signin`,
+      `https://linked-posts.routemisr.com/users/signup`,
       {
         method: "POST",
         body: JSON.stringify(values),
@@ -30,21 +32,20 @@ export default function Login() {
         },
       }
     );
-
     let data = await response.json();
-    if (response.ok) {
-      dispatch(setToken(data));
-    } else {
-      dispatch(setError(data.error));
-    }
+    console.log(data);
   }
 
   let { handleChange, handleSubmit, values } = useFormik({
     initialValues: {
+      name: "",
       email: "",
       password: "",
+      rePassword: "",
+      dateOfBirth: "",
+      gender: "",
     },
-    onSubmit: login,
+    onSubmit: register,
   });
 
   return (
@@ -53,12 +54,12 @@ export default function Login() {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        minHeight: "80vh",
+        minHeight: "90vh",
       }}
     >
       <Paper elevation={7} sx={{ p: 4, width: "100%", maxWidth: 400 }}>
         <Typography variant="h4" align="center" sx={{ mb: 3 }}>
-          Login
+          Register
         </Typography>
         <form
           onSubmit={handleSubmit}
@@ -68,6 +69,15 @@ export default function Login() {
             gap: "1.5rem",
           }}
         >
+          <TextField
+            fullWidth
+            id="name"
+            label="Name"
+            type="text"
+            variant="outlined"
+            onChange={handleChange}
+            value={values.name}
+          />
           <TextField
             fullWidth
             id="email"
@@ -86,14 +96,43 @@ export default function Login() {
             onChange={handleChange}
             value={values.password}
           />
+          <TextField
+            fullWidth
+            id="rePassword"
+            label="Confirm Password"
+            type="password"
+            variant="outlined"
+            onChange={handleChange}
+            value={values.rePassword}
+          />
+          <TextField
+            fullWidth
+            id="dateOfBirth"
+            label="Date of Birth"
+            type="date"
+            variant="outlined"
+            onChange={handleChange}
+            value={values.dateOfBirth}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <TextField
+            fullWidth
+            id="gender"
+            label="Gender"
+            type="text"
+            variant="outlined"
+            onChange={handleChange}
+            value={values.gender}
+          />
           <Button
-            disabled={isLoading}
             type="submit"
             fullWidth
             variant="contained"
-            sx={{ mt: 2 }}
+            sx={{ mt: 2, py: 1.5 }}
           >
-            {isLoading ? <CircularProgress size="30px" /> : "login"}
+            Register
           </Button>
         </form>
       </Paper>
