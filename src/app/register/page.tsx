@@ -12,8 +12,13 @@ import {
   InputLabel,
 } from "@mui/material";
 import { useFormik } from "formik";
+import { useRouter } from "next/navigation";
+import { setError, setToken } from "../_redux/authSlice";
+import { useDispatch } from "react-redux";
 
 export default function Register() {
+  let dispatch = useDispatch(); // to send action on it because of redux logic
+  let router = useRouter();
   async function register(values: {
     name: string;
     email: string;
@@ -33,7 +38,12 @@ export default function Register() {
       }
     );
     let data = await response.json();
-    console.log(data);
+    if (response.ok) {
+      router.push("/login"); //! go to login page
+      dispatch(setToken(data));
+    } else {
+      dispatch(setError(data.error));
+    }
   }
 
   let { handleChange, handleSubmit, values } = useFormik({

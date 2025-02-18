@@ -12,11 +12,14 @@ import { useFormik } from "formik";
 import { useDispatch, useSelector } from "react-redux";
 import { State } from "../_redux/store";
 import { setError, setLoading, setToken } from "../_redux/authSlice";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
   let isLoading = useSelector((store: State) => store.authReducer.isLoading);
 
   let dispatch = useDispatch();
+
+  let router = useRouter(); //! you must choose userouter of navigation not of router | its like Link or useNavigate
 
   async function login(values: { email: string; password: string }) {
     dispatch(setLoading());
@@ -33,6 +36,7 @@ export default function Login() {
 
     let data = await response.json();
     if (response.ok) {
+      router.push("/"); //! go to home page
       dispatch(setToken(data));
     } else {
       dispatch(setError(data.error));

@@ -14,6 +14,10 @@ import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import AdbIcon from "@mui/icons-material/Adb";
 import Link from "next/link";
+import { useDispatch, useSelector } from "react-redux";
+import { State } from "../_redux/store";
+import { useRouter } from "next/navigation";
+import { removeToken } from "../_redux/authSlice";
 
 function ResponsiveAppBar() {
   const [anchorElNav, setAnchorElNav] = React.useState<null | HTMLElement>(
@@ -37,7 +41,16 @@ function ResponsiveAppBar() {
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
+  let router = useRouter();
+  let dispatch = useDispatch();
+  function logOut() {
+    //!logout
+    handleCloseNavMenu(); // this method we had to call it because of nav bar
+    router.push("/login"); // go to login when you logout
+    dispatch(removeToken()); // methos in authSlice that remove user token
+  }
 
+  let token = useSelector((state: State) => state.authReducer.token);
   return (
     <AppBar position="static">
       <Container maxWidth="xl">
@@ -55,7 +68,7 @@ function ResponsiveAppBar() {
               textDecoration: "none",
             }}
           >
-            <Link href={"/"}>rhombus</Link>
+            {token ? <Link href={"/"}>rhombus</Link> : "rhombus"}
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
@@ -69,29 +82,35 @@ function ResponsiveAppBar() {
             >
               <MenuIcon />
             </IconButton>
-            <Menu
-              id="menu-appbar"
-              anchorEl={anchorElNav}
-              anchorOrigin={{
-                vertical: "bottom",
-                horizontal: "left",
-              }}
-              keepMounted
-              transformOrigin={{
-                vertical: "top",
-                horizontal: "left",
-              }}
-              open={Boolean(anchorElNav)}
-              onClose={handleCloseNavMenu}
-              sx={{ display: { xs: "block", md: "none" } }}
-            >
-              <MenuItem onClick={handleCloseNavMenu}>
-                <Typography sx={{ textAlign: "center" }}>
-                  <Link href={"/profile"}>Profile</Link>
-                  <Link href={"/createpost"}>Add Post</Link>
-                </Typography>
-              </MenuItem>
-            </Menu>
+            {token && (
+              <Menu
+                id="menu-appbar"
+                anchorEl={anchorElNav}
+                anchorOrigin={{
+                  vertical: "bottom",
+                  horizontal: "left",
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: "top",
+                  horizontal: "left",
+                }}
+                open={Boolean(anchorElNav)}
+                onClose={handleCloseNavMenu}
+                sx={{ display: { xs: "block", md: "none" } }}
+              >
+                <MenuItem onClick={handleCloseNavMenu}>
+                  <Typography sx={{ textAlign: "center" }}>
+                    <Link href={"/profile"}>Profile</Link>
+                  </Typography>
+                </MenuItem>
+                <MenuItem onClick={handleCloseNavMenu}>
+                  <Typography sx={{ textAlign: "center" }}>
+                    <Link href={"/createpost"}>Add Post</Link>
+                  </Typography>
+                </MenuItem>
+              </Menu>
+            )}
           </Box>
 
           <Typography
@@ -108,42 +127,54 @@ function ResponsiveAppBar() {
               textDecoration: "none",
             }}
           >
-            <Link href={"/"}>rhombus</Link>
+            {token ? <Link href={"/"}>rhombus</Link> : "rhombus"}
           </Typography>
+
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
-            <Button
-              onClick={handleCloseNavMenu}
-              sx={{ my: 2, color: "white", display: "block" }}
-            >
-              <Link href={"/profile"}>Profile</Link>
-            </Button>{" "}
-            <Button
-              onClick={handleCloseNavMenu}
-              sx={{ my: 2, color: "white", display: "block" }}
-            >
-              <Link href={"/createpost"}>Add Post</Link>
-            </Button>{" "}
+            {token && (
+              <Box sx={{ display: { xs: "none", md: "flex" } }}>
+                <Button
+                  onClick={handleCloseNavMenu}
+                  sx={{ my: 2, color: "white", display: "block" }}
+                >
+                  <Link href={"/profile"}>Profile</Link>
+                </Button>{" "}
+                <Button
+                  onClick={handleCloseNavMenu}
+                  sx={{ my: 2, color: "white", display: "block" }}
+                >
+                  <Link href={"/createpost"}>Add Post</Link>
+                </Button>{" "}
+              </Box>
+            )}
           </Box>
+
           <Box sx={{ flexGrow: 0, display: { xs: "none", md: "flex" } }}>
-            <Button
-              onClick={handleCloseNavMenu}
-              sx={{ my: 2, color: "white", display: "block" }}
-            >
-              <Link href={"/login"}>Login</Link>
-            </Button>{" "}
-            <Button
-              onClick={handleCloseNavMenu}
-              sx={{ my: 2, color: "white", display: "block" }}
-            >
-              <Link href={"/register"}>Register</Link>
-            </Button>{" "}
-            <Button
-              onClick={handleCloseNavMenu}
-              sx={{ my: 2, color: "white", display: "block" }}
-            >
-             Logout
-            </Button>{" "}
+            {token ? (
+              <Button
+                onClick={logOut}
+                sx={{ my: 2, color: "white", display: "block" }}
+              >
+                Logout
+              </Button>
+            ) : (
+              <Box sx={{ flexGrow: 0, display: { xs: "none", md: "flex" } }}>
+                <Button
+                  onClick={handleCloseNavMenu}
+                  sx={{ my: 2, color: "white", display: "block" }}
+                >
+                  <Link href={"/login"}>Login</Link>
+                </Button>
+                <Button
+                  onClick={handleCloseNavMenu}
+                  sx={{ my: 2, color: "white", display: "block" }}
+                >
+                  <Link href={"/register"}>Register</Link>
+                </Button>
+              </Box>
+            )}
           </Box>
+
           <Box sx={{ flexGrow: 0, display: { xs: "flex", md: "none" } }}>
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
@@ -166,23 +197,27 @@ function ResponsiveAppBar() {
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
             >
-              <MenuItem onClick={handleCloseUserMenu}>
-                <Typography sx={{ textAlign: "center" }}>
-                  <Link href={"/login"}>Login</Link>
-                </Typography>
-              </MenuItem>
+              {token ? (
+                <MenuItem onClick={logOut}>
+                  <Typography sx={{ textAlign: "center" }}>
+                    <Link href={"/logout"}>Logout</Link>
+                  </Typography>
+                </MenuItem>
+              ) : (
+                <Box>
+                  <MenuItem onClick={handleCloseUserMenu}>
+                    <Typography sx={{ textAlign: "center" }}>
+                      <Link href={"/login"}>Login</Link>
+                    </Typography>
+                  </MenuItem>
 
-              <MenuItem onClick={handleCloseUserMenu}>
-                <Typography sx={{ textAlign: "center" }}>
-                  <Link href={"/register"}>Register</Link>
-                </Typography>
-              </MenuItem>
-
-              <MenuItem onClick={handleCloseUserMenu}>
-                <Typography sx={{ textAlign: "center" }}>
-                  <Link href={"/logout"}>Logout</Link>
-                </Typography>
-              </MenuItem>
+                  <MenuItem onClick={handleCloseUserMenu}>
+                    <Typography sx={{ textAlign: "center" }}>
+                      <Link href={"/register"}>Register</Link>
+                    </Typography>
+                  </MenuItem>
+                </Box>
+              )}
             </Menu>
           </Box>
         </Toolbar>
