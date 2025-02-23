@@ -10,14 +10,16 @@ import Avatar from "@mui/material/Avatar";
 import IconButton, { IconButtonProps } from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { red } from "@mui/material/colors";
-import FavoriteIcon from "@mui/icons-material/Favorite";
 import ShareIcon from "@mui/icons-material/Share";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import CommentIcon from "@mui/icons-material/Comment";
-import { Post } from "../interfaces";
+import { Comment, Post } from "../interfaces";
 import Image from "next/image";
+import Link from "next/link";
+import { Button, TextField } from "@mui/material";
+import toast from "react-hot-toast";
 
 interface ExpandMoreProps extends IconButtonProps {
   expand: boolean;
@@ -47,15 +49,53 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
   ],
 }));
 
-export default function PostDetails({ post }: { post: Post }) {
+export default function PostDetails({
+  post,
+  isComments = false,
+}: {
+  post: Post;
+  isComments?: Boolean;
+}) {
   const [expanded, setExpanded] = React.useState(false);
 
   const handleExpandClick = () => {
     setExpanded(!expanded);
   };
 
+  const [comments, setComments] = React.useState([]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault(); // prevent submit reload
+    let form = e.target as HTMLFormElement;
+
+    let values = {
+      // the api waiting values
+      content: form.comment.value, // values of comment
+      post: post._id, // the post id
+    };
+    let response = await fetch(`https://linked-posts.routemisr.com/comments`, {
+      method: "POST",
+      body: JSON.stringify(values), // transform data from json to string
+      headers: {
+        token: `${localStorage.getItem("token")}`,
+        "Content-type": "application/json",
+      },
+    });
+    let data = await response.json();
+    setComments(data.comments);
+    form.comment.value = null; // to make the input empty 
+  }
+
   return (
-    <Card sx={{ m: 3 }} elevation={5}>
+    <Card
+      sx={{
+        m: 3,
+        p: 2,
+        width: { xs: "90%", md: "75%", xl: "35%" },
+        mx: "auto",
+      }}
+      elevation={5}
+    >
       <CardHeader
         avatar={
           <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
@@ -76,19 +116,31 @@ export default function PostDetails({ post }: { post: Post }) {
         title={post.user.name}
         subheader={post.createdAt.split("T", 1)} // delete from T to the end
       />
-      <Typography variant="body2" sx={{ color: "text.secondary" }}>
+      {/* the description of the post */}
+      <Typography
+        variant="body2"
+        sx={{ color: "text.secondary", mb: 1, fontFamily: "cursive" }}
+      >
         {post.body}
       </Typography>
+      {/* the image of the post */}
       {post.image && (
         <Image
           src={post.image}
           alt={`${post.body}`}
-          style={{ width: "100%", objectFit:'cover' }}
+          style={{
+            width: "100%",
+            objectFit: "cover",
+            borderRadius: "10px",
+            objectPosition: "top",
+            height: "auto",
+          }}
           width={400}
           height={300}
         />
       )}
       <CardContent></CardContent>
+      {/* like + comment + share icons actions */}
       <CardActions
         sx={{
           width: "50%",
@@ -97,6 +149,7 @@ export default function PostDetails({ post }: { post: Post }) {
           justifyContent: "space-between",
         }}
       >
+        {/* like of post */}
         <IconButton aria-label="add to favorites">
           <ThumbUpIcon />
         </IconButton>
@@ -109,17 +162,193 @@ export default function PostDetails({ post }: { post: Post }) {
           <CommentIcon />
         </ExpandMore>
         <IconButton aria-label="share">
+          {" "}
+          {/* icon of share */}
           <ShareIcon />
         </IconButton>
       </CardActions>
       <Collapse in={expanded} timeout="auto" unmountOnExit>
-        <CardContent>
-          <Typography sx={{ marginBottom: 2 }}>Method:</Typography>
-          <Typography sx={{ marginBottom: 2 }}>
-            Heat 1/2 cup of the broth in a pot until simmering, add saffron and
-            set aside for 10 minutes.
-          </Typography>
-        </CardContent>
+        {/* if comments more than 0 and there isn't comments display that */}
+        {post.comments.length > 0 && isComments == false ? (
+          <CardContent sx={{ backgroundColor: "#eee", my: 2 }}>
+            <CardHeader
+              avatar={
+                <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
+                  {" "}
+                  {/* // the image of user comment creater */}
+                  {!post.comments[0].commentCreator.photo.includes(
+                    "undefined"
+                  ) ? (
+                    <Image
+                      src={post.comments[0].commentCreator.photo}
+                      alt={post.comments[0].commentCreator.name}
+                      style={{ width: "100%", height: "auto" }}
+                      width={40}
+                      height={40}
+                    />
+                  ) : (
+                    post.comments[0].commentCreator.name.slice(0, 1)
+                  )}
+                </Avatar>
+              }
+              action={
+                <IconButton aria-label="settings">
+                  <MoreVertIcon />
+                </IconButton>
+              }
+              title={post.comments[0].commentCreator.name}
+              subheader={post.comments[0].createdAt.split("T", 1)} // delete from T to the end
+            />
+            {/* content of post */}
+            <Typography sx={{ marginBottom: 2, width: "80%", mx: "auto" }}>
+              {post.comments[0].content}
+            </Typography>
+            <Link
+              href={`/singlePost/${post._id}`}
+              style={{
+                textAlign: "right",
+                width: "100%",
+                display: "block",
+                color: "#09c",
+              }}
+            >
+              {" "}
+              View All Comments{" "}
+            </Link>
+          </CardContent>
+        ) : // if comment more than 0 and there is comments also then map to all comments to display it
+        post.comments.length > comments.length && isComments ? (
+          post.comments.map((comment: Comment) => (
+            <CardContent
+              key={comment._id}
+              sx={{ backgroundColor: "#eee", my: 2 }}
+            >
+              <CardHeader
+                avatar={
+                  <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
+                    {" "}
+                    {/* // the image of user comment creater */}
+                    {!comment.commentCreator.photo.includes("undefined") ? (
+                      <Image
+                        src={comment.commentCreator.photo}
+                        alt={comment.commentCreator.name}
+                        style={{ width: "100%", height: "auto" }}
+                        width={40}
+                        height={40}
+                      />
+                    ) : (
+                      comment.commentCreator.name.slice(0, 1)
+                    )}
+                  </Avatar>
+                }
+                action={
+                  <IconButton aria-label="settings">
+                    <MoreVertIcon />
+                  </IconButton>
+                }
+                title={comment.commentCreator.name}
+                subheader={comment.createdAt.split("T", 1)} // delete from T to the end
+              />
+              {/* content of post */}
+              <Typography sx={{ marginBottom: 2, width: "80%", mx: "auto" }}>
+                {comment.content}
+              </Typography>
+            </CardContent>
+          ))
+        ) : (
+          comments.map((comment: Comment) => (
+            <CardContent
+              key={comment._id}
+              sx={{ backgroundColor: "#eee", my: 2 }}
+            >
+              <CardHeader
+                avatar={
+                  <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
+                    {" "}
+                    {/* // the image of user comment creater */}
+                    {!comment.commentCreator.photo.includes("undefined") ? (
+                      <Image
+                        src={comment.commentCreator.photo}
+                        alt={comment.commentCreator.name}
+                        style={{ width: "100%", height: "auto" }}
+                        width={40}
+                        height={40}
+                      />
+                    ) : (
+                      comment.commentCreator.name.slice(0, 1)
+                    )}
+                  </Avatar>
+                }
+                action={
+                  <IconButton aria-label="settings">
+                    <MoreVertIcon />
+                  </IconButton>
+                }
+                title={comment.commentCreator.name}
+                subheader={comment.createdAt.split("T", 1)} // delete from T to the end
+              />
+              {/* content of post */}
+              <Typography sx={{ marginBottom: 2, width: "80%", mx: "auto" }}>
+                {comment.content}
+              </Typography>
+            </CardContent>
+          ))
+        )}
+        <form
+          style={{
+            padding: "1rem",
+            display: "flex",
+            gap: "0.5rem",
+            alignItems: "center",
+          }}
+          onSubmit={(e) => handleSubmit(e)}
+        >
+          <TextField
+            name="comment"
+            id="comment"
+            label="Add a comment"
+            type="text"
+            variant="outlined"
+            sx={{
+              flex: 1,
+              borderRadius: "8px",
+              backgroundColor: "#f5f5f5",
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "20px",
+              },
+              "& .MuiInputLabel-root": {
+                fontSize: "1rem",
+                color: "#555",
+              },
+              "& .MuiOutlinedInput-notchedOutline": {
+                borderColor: "#ccc",
+              },
+              "&:hover .MuiOutlinedInput-notchedOutline": {
+                borderColor: "#1976d2",
+              },
+              "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                borderColor: "#1976d2",
+              },
+            }}
+          />
+          <Button
+            type="submit"
+            variant="contained"
+            sx={{
+              borderRadius: "20px",
+              padding: "8px 16px",
+              backgroundColor: "#1976d2", // MUI primary blue
+              color: "#fff",
+              textTransform: "none",
+              fontWeight: "bold",
+              "&:hover": {
+                backgroundColor: "#1565c0",
+              },
+            }}
+          >
+            Add
+          </Button>
+        </form>
       </Collapse>
     </Card>
   );
