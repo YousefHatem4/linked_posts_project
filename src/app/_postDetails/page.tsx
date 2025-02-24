@@ -18,8 +18,11 @@ import CommentIcon from "@mui/icons-material/Comment";
 import { Comment, Post } from "../interfaces";
 import Image from "next/image";
 import Link from "next/link";
-import { Button, TextField } from "@mui/material";
+import { Button, TextField, Menu, MenuItem } from "@mui/material"; // Import Menu and MenuItem
 import toast from "react-hot-toast";
+import { useDispatch } from "react-redux";
+import { deletePost, deletePostComment } from "../_redux/postsSlice";
+import { storeDispatch } from "../_redux/store";
 
 interface ExpandMoreProps extends IconButtonProps {
   expand: boolean;
@@ -57,10 +60,60 @@ export default function PostDetails({
   isComments?: Boolean;
 }) {
   const [expanded, setExpanded] = React.useState(false);
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null); // For Menu
 
   const handleExpandClick = () => {
     setExpanded(!expanded);
   };
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget); // Open the menu
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null); // Close the menu
+  };
+
+  let dispatch = useDispatch<storeDispatch>();
+
+  const handleDelete = async () => {
+    try {
+      await dispatch(deletePost(post._id)).unwrap();
+      toast.success("Post deleted successfully!");
+      handleMenuClose();
+    } catch (error) {
+      toast.error("Failed to delete post.");
+    }
+  };
+  // delete the comment 
+  
+  const [commentAnchorEl, setCommentAnchorEl] = React.useState<{
+    [key: string]: HTMLElement | null;
+  }>({});
+
+const handleDeleteComment = async (commentId: string) => {
+  try {
+    await dispatch(deletePostComment(commentId)).unwrap();
+    toast.success("Comment deleted successfully!");
+    handleCommentMenuClose(commentId); // Close the comment menu after deletion
+  } catch (error) {
+    toast.error("Failed to delete comment.");
+  }
+};
+
+  const handleCommentMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    commentId: string
+  ) => {
+    setCommentAnchorEl((prev) => ({
+      ...prev,
+      [commentId]: event.currentTarget,
+    }));
+  };
+  const handleCommentMenuClose = (commentId: string) => {
+    setCommentAnchorEl((prev) => ({ ...prev, [commentId]: null }));
+  };
+
 
   const [comments, setComments] = React.useState([]);
 
@@ -83,7 +136,7 @@ export default function PostDetails({
     });
     let data = await response.json();
     setComments(data.comments);
-    form.comment.value = null; // to make the input empty 
+    form.comment.value = null; // to make the input empty
   }
 
   return (
@@ -109,9 +162,19 @@ export default function PostDetails({
           </Avatar>
         }
         action={
-          <IconButton aria-label="settings">
-            <MoreVertIcon />
-          </IconButton>
+          <>
+            <IconButton aria-label="settings" onClick={handleMenuOpen}>
+              <MoreVertIcon />
+            </IconButton>
+            {/* Menu for Delete Option */}
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={handleDelete}>Delete</MenuItem>
+            </Menu>
+          </>
         }
         title={post.user.name}
         subheader={post.createdAt.split("T", 1)} // delete from T to the end
@@ -242,9 +305,26 @@ export default function PostDetails({
                   </Avatar>
                 }
                 action={
-                  <IconButton aria-label="settings">
-                    <MoreVertIcon />
-                  </IconButton>
+                  <>
+                    <IconButton
+                      aria-label="settings"
+                      onClick={(e) => handleCommentMenuOpen(e, comment._id)}
+                    >
+                      <MoreVertIcon />
+                    </IconButton>
+
+                    <Menu
+                      anchorEl={commentAnchorEl[comment._id] || null}
+                      open={Boolean(commentAnchorEl[comment._id])}
+                      onClose={() => handleCommentMenuClose(comment._id)}
+                    >
+                      <MenuItem
+                        onClick={() => handleDeleteComment(comment._id)}
+                      >
+                        Delete Comment
+                      </MenuItem>
+                    </Menu>
+                  </>
                 }
                 title={comment.commentCreator.name}
                 subheader={comment.createdAt.split("T", 1)} // delete from T to the end
@@ -280,7 +360,7 @@ export default function PostDetails({
                   </Avatar>
                 }
                 action={
-                  <IconButton aria-label="settings">
+                  <IconButton aria-label="settings" onClick={handleMenuOpen}>
                     <MoreVertIcon />
                   </IconButton>
                 }
