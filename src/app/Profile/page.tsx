@@ -8,20 +8,23 @@ import Loading from "@/app/loading";
 import PostDetails from "../_postDetails/page";
 
 export default function Profile() {
-  let { loading, posts } = useSelector((state: State) => state.postsReducers);
-  let dispatch = useDispatch<storeDispatch>();
-  let x = jwtDecode(`${localStorage.getItem("token")}`); // to destruct token of the user
-  let postReverse = [...posts];
+  const { loading, posts } = useSelector((state: State) => state.postsReducers);
+  const dispatch = useDispatch<storeDispatch>();
+  const x = jwtDecode(`${localStorage.getItem("token")}`); // to destruct token of the user
+  const postReverse = [...posts];
 
   useEffect(() => {
     dispatch(getUserPosts(x.user));
   }, []);
+
   return (
     <>
       {loading ? (
         <Loading />
       ) : (
-        postReverse.map((post) => <PostDetails key={post._id} post={post} isComments={true} />)
+        postReverse.map((post) => (
+          <PostDetails key={post._id} post={post} isComments={true} />
+        ))
       )}
     </>
   );
