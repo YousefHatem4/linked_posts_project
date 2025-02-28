@@ -55,7 +55,7 @@ export default function PostDetails({
   isComments = false,
 }: {
   post: Post;
-  isComments?: Boolean;
+  isComments?: boolean;
 }) {
   const [expanded, setExpanded] = React.useState(false);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null); // For Menu
@@ -79,7 +79,7 @@ export default function PostDetails({
       await dispatch(deletePost(post._id)).unwrap();
       toast.success("Post deleted successfully!");
       handleMenuClose();
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete post.");
     }
   };
