@@ -12,7 +12,6 @@ import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
-import AdbIcon from "@mui/icons-material/Adb";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
 import { State } from "../_redux/store";
@@ -41,8 +40,8 @@ function ResponsiveAppBar() {
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
-  let router = useRouter();
-  let dispatch = useDispatch();
+  const router = useRouter();
+  const dispatch = useDispatch();
   function logOut() {
     //!logout
     handleCloseNavMenu(); // this method we had to call it because of nav bar
@@ -50,7 +49,7 @@ function ResponsiveAppBar() {
     dispatch(removeToken()); // methos in authSlice that remove user token
   }
 
-  let token = useSelector((state: State) => state.authReducer.token);
+  const token = useSelector((state: State) => state.authReducer.token);
   return (
     <AppBar position="static">
       <Container maxWidth="xl">
