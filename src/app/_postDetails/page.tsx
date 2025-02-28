@@ -2,7 +2,6 @@ import * as React from "react";
 import { styled } from "@mui/material/styles";
 import Card from "@mui/material/Card";
 import CardHeader from "@mui/material/CardHeader";
-import CardMedia from "@mui/material/CardMedia";
 import CardContent from "@mui/material/CardContent";
 import CardActions from "@mui/material/CardActions";
 import Collapse from "@mui/material/Collapse";
@@ -11,7 +10,6 @@ import IconButton, { IconButtonProps } from "@mui/material/IconButton";
 import Typography from "@mui/material/Typography";
 import { red } from "@mui/material/colors";
 import ShareIcon from "@mui/icons-material/Share";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import CommentIcon from "@mui/icons-material/Comment";
@@ -74,7 +72,7 @@ export default function PostDetails({
     setAnchorEl(null); // Close the menu
   };
 
-  let dispatch = useDispatch<storeDispatch>();
+  const dispatch = useDispatch<storeDispatch>();
 
   const handleDelete = async () => {
     try {
@@ -119,14 +117,14 @@ const handleDeleteComment = async (commentId: string) => {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); // prevent submit reload
-    let form = e.target as HTMLFormElement;
+    const form = e.target as HTMLFormElement;
 
-    let values = {
+    const values = {
       // the api waiting values
       content: form.comment.value, // values of comment
       post: post._id, // the post id
     };
-    let response = await fetch(`https://linked-posts.routemisr.com/comments`, {
+    const response = await fetch(`https://linked-posts.routemisr.com/comments`, {
       method: "POST",
       body: JSON.stringify(values), // transform data from json to string
       headers: {
@@ -134,7 +132,7 @@ const handleDeleteComment = async (commentId: string) => {
         "Content-type": "application/json",
       },
     });
-    let data = await response.json();
+    const data = await response.json();
     setComments(data.comments);
     form.comment.value = null; // to make the input empty
   }
