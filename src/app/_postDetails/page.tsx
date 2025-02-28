@@ -16,7 +16,7 @@ import CommentIcon from "@mui/icons-material/Comment";
 import { Comment, Post } from "../interfaces";
 import Image from "next/image";
 import Link from "next/link";
-import { Button, TextField, Menu, MenuItem } from "@mui/material"; // Import Menu and MenuItem
+import { Button, TextField, Menu, MenuItem } from "@mui/material";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 import { deletePost, deletePostComment } from "../_redux/postsSlice";
@@ -28,6 +28,7 @@ interface ExpandMoreProps extends IconButtonProps {
 
 const ExpandMore = styled((props: ExpandMoreProps) => {
   const { expand, ...other } = props;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return <IconButton {...other} />;
 })(({ theme }) => ({
   marginLeft: "auto",
@@ -58,21 +59,24 @@ export default function PostDetails({
   isComments?: boolean;
 }) {
   const [expanded, setExpanded] = React.useState(false);
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null); // For Menu
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [commentAnchorEl, setCommentAnchorEl] = React.useState<{
+    [key: string]: HTMLElement | null;
+  }>({});
+  const [comments, setComments] = React.useState<Comment[]>([]);
+  const dispatch = useDispatch<storeDispatch>();
 
   const handleExpandClick = () => {
     setExpanded(!expanded);
   };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget); // Open the menu
+    setAnchorEl(event.currentTarget);
   };
 
   const handleMenuClose = () => {
-    setAnchorEl(null); // Close the menu
+    setAnchorEl(null);
   };
-
-  const dispatch = useDispatch<storeDispatch>();
 
   const handleDelete = async () => {
     try {
@@ -83,21 +87,17 @@ export default function PostDetails({
       toast.error("Failed to delete post.");
     }
   };
-  // delete the comment 
-  
-  const [commentAnchorEl, setCommentAnchorEl] = React.useState<{
-    [key: string]: HTMLElement | null;
-  }>({});
 
-const handleDeleteComment = async (commentId: string) => {
-  try {
-    await dispatch(deletePostComment(commentId)).unwrap();
-    toast.success("Comment deleted successfully!");
-    handleCommentMenuClose(commentId); // Close the comment menu after deletion
-  } catch (error) {
-    toast.error("Failed to delete comment.");
-  }
-};
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      await dispatch(deletePostComment(commentId)).unwrap();
+      toast.success("Comment deleted successfully!");
+      handleCommentMenuClose(commentId);
+    } catch (error) {
+      console.error(error); // Log the error for debugging
+      toast.error("Failed to delete comment.");
+    }
+  };
 
   const handleCommentMenuOpen = (
     event: React.MouseEvent<HTMLElement>,
@@ -108,34 +108,40 @@ const handleDeleteComment = async (commentId: string) => {
       [commentId]: event.currentTarget,
     }));
   };
+
   const handleCommentMenuClose = (commentId: string) => {
     setCommentAnchorEl((prev) => ({ ...prev, [commentId]: null }));
   };
 
-
-  const [comments, setComments] = React.useState([]);
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault(); // prevent submit reload
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     const form = e.target as HTMLFormElement;
 
     const values = {
-      // the api waiting values
-      content: form.comment.value, // values of comment
-      post: post._id, // the post id
+      content: form.comment.value,
+      post: post._id,
     };
-    const response = await fetch(`https://linked-posts.routemisr.com/comments`, {
-      method: "POST",
-      body: JSON.stringify(values), // transform data from json to string
-      headers: {
-        token: `${localStorage.getItem("token")}`,
-        "Content-type": "application/json",
-      },
-    });
-    const data = await response.json();
-    setComments(data.comments);
-    form.comment.value = null; // to make the input empty
-  }
+
+    try {
+      const response = await fetch(
+        `https://linked-posts.routemisr.com/comments`,
+        {
+          method: "POST",
+          body: JSON.stringify(values),
+          headers: {
+            token: `${localStorage.getItem("token")}`,
+            "Content-type": "application/json",
+          },
+        }
+      );
+      const data = await response.json();
+      setComments(data.comments);
+      form.comment.value = "";
+    } catch (error) {
+      console.error(error); // Log the error for debugging
+      toast.error("Failed to add comment.");
+    }
+  };
 
   return (
     <Card
@@ -164,7 +170,6 @@ const handleDeleteComment = async (commentId: string) => {
             <IconButton aria-label="settings" onClick={handleMenuOpen}>
               <MoreVertIcon />
             </IconButton>
-            {/* Menu for Delete Option */}
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl)}
@@ -175,16 +180,14 @@ const handleDeleteComment = async (commentId: string) => {
           </>
         }
         title={post.user.name}
-        subheader={post.createdAt.split("T", 1)} // delete from T to the end
+        subheader={post.createdAt.split("T", 1)}
       />
-      {/* the description of the post */}
       <Typography
         variant="body2"
         sx={{ color: "text.secondary", mb: 1, fontFamily: "cursive" }}
       >
         {post.body}
       </Typography>
-      {/* the image of the post */}
       {post.image && (
         <Image
           src={post.image}
@@ -201,7 +204,6 @@ const handleDeleteComment = async (commentId: string) => {
         />
       )}
       <CardContent></CardContent>
-      {/* like + comment + share icons actions */}
       <CardActions
         sx={{
           width: "50%",
@@ -210,7 +212,6 @@ const handleDeleteComment = async (commentId: string) => {
           justifyContent: "space-between",
         }}
       >
-        {/* like of post */}
         <IconButton aria-label="add to favorites">
           <ThumbUpIcon />
         </IconButton>
@@ -223,20 +224,15 @@ const handleDeleteComment = async (commentId: string) => {
           <CommentIcon />
         </ExpandMore>
         <IconButton aria-label="share">
-          {" "}
-          {/* icon of share */}
           <ShareIcon />
         </IconButton>
       </CardActions>
       <Collapse in={expanded} timeout="auto" unmountOnExit>
-        {/* if comments more than 0 and there isn't comments display that */}
-        {post.comments.length > 0 && isComments == false ? (
+        {post.comments.length > 0 && !isComments ? (
           <CardContent sx={{ backgroundColor: "#eee", my: 2 }}>
             <CardHeader
               avatar={
                 <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
-                  {" "}
-                  {/* // the image of user comment creater */}
                   {!post.comments[0].commentCreator.photo.includes(
                     "undefined"
                   ) ? (
@@ -258,9 +254,8 @@ const handleDeleteComment = async (commentId: string) => {
                 </IconButton>
               }
               title={post.comments[0].commentCreator.name}
-              subheader={post.comments[0].createdAt.split("T", 1)} // delete from T to the end
+              subheader={post.comments[0].createdAt.split("T", 1)}
             />
-            {/* content of post */}
             <Typography sx={{ marginBottom: 2, width: "80%", mx: "auto" }}>
               {post.comments[0].content}
             </Typography>
@@ -273,12 +268,10 @@ const handleDeleteComment = async (commentId: string) => {
                 color: "#09c",
               }}
             >
-              {" "}
-              View All Comments{" "}
+              View All Comments
             </Link>
           </CardContent>
-        ) : // if comment more than 0 and there is comments also then map to all comments to display it
-        post.comments.length > comments.length && isComments ? (
+        ) : post.comments.length > comments.length && isComments ? (
           post.comments.map((comment: Comment) => (
             <CardContent
               key={comment._id}
@@ -287,8 +280,6 @@ const handleDeleteComment = async (commentId: string) => {
               <CardHeader
                 avatar={
                   <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
-                    {" "}
-                    {/* // the image of user comment creater */}
                     {!comment.commentCreator.photo.includes("undefined") ? (
                       <Image
                         src={comment.commentCreator.photo}
@@ -310,7 +301,6 @@ const handleDeleteComment = async (commentId: string) => {
                     >
                       <MoreVertIcon />
                     </IconButton>
-
                     <Menu
                       anchorEl={commentAnchorEl[comment._id] || null}
                       open={Boolean(commentAnchorEl[comment._id])}
@@ -325,9 +315,8 @@ const handleDeleteComment = async (commentId: string) => {
                   </>
                 }
                 title={comment.commentCreator.name}
-                subheader={comment.createdAt.split("T", 1)} // delete from T to the end
+                subheader={comment.createdAt.split("T", 1)}
               />
-              {/* content of post */}
               <Typography sx={{ marginBottom: 2, width: "80%", mx: "auto" }}>
                 {comment.content}
               </Typography>
@@ -342,8 +331,6 @@ const handleDeleteComment = async (commentId: string) => {
               <CardHeader
                 avatar={
                   <Avatar sx={{ bgcolor: red[500] }} aria-label="recipe">
-                    {" "}
-                    {/* // the image of user comment creater */}
                     {!comment.commentCreator.photo.includes("undefined") ? (
                       <Image
                         src={comment.commentCreator.photo}
@@ -363,9 +350,8 @@ const handleDeleteComment = async (commentId: string) => {
                   </IconButton>
                 }
                 title={comment.commentCreator.name}
-                subheader={comment.createdAt.split("T", 1)} // delete from T to the end
+                subheader={comment.createdAt.split("T", 1)}
               />
-              {/* content of post */}
               <Typography sx={{ marginBottom: 2, width: "80%", mx: "auto" }}>
                 {comment.content}
               </Typography>
@@ -379,7 +365,7 @@ const handleDeleteComment = async (commentId: string) => {
             gap: "0.5rem",
             alignItems: "center",
           }}
-          onSubmit={(e) => handleSubmit(e)}
+          onSubmit={handleSubmit}
         >
           <TextField
             name="comment"
@@ -415,7 +401,7 @@ const handleDeleteComment = async (commentId: string) => {
             sx={{
               borderRadius: "20px",
               padding: "8px 16px",
-              backgroundColor: "#1976d2", // MUI primary blue
+              backgroundColor: "#1976d2",
               color: "#fff",
               textTransform: "none",
               fontWeight: "bold",
