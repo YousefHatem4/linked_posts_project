@@ -34,7 +34,7 @@ const ExpandMore = styled((props: ExpandMoreProps) => {
   transition: theme.transitions.create("transform", {
     duration: theme.transitions.duration.shortest,
   }),
-  transform: expand ? "rotate(180deg)" : "rotate(0deg)", // Use `expand` to control rotation
+  transform: expand ? "rotate(180deg)" : "rotate(0deg)",
 }));
 
 export default function PostDetails({
@@ -80,7 +80,7 @@ export default function PostDetails({
       toast.success("Comment deleted successfully!");
       handleCommentMenuClose(commentId);
     } catch (error) {
-      console.error(error); // Log the error for debugging
+      console.error(error);
       toast.error("Failed to delete comment.");
     }
   };
@@ -124,7 +124,7 @@ export default function PostDetails({
       setComments(data.comments);
       form.comment.value = "";
     } catch (error) {
-      console.error(error); // Log the error for debugging
+      console.error(error);
       toast.error("Failed to add comment.");
     }
   };
