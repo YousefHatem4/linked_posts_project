@@ -28,27 +28,13 @@ interface ExpandMoreProps extends IconButtonProps {
 
 const ExpandMore = styled((props: ExpandMoreProps) => {
   const { expand, ...other } = props;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return <IconButton {...other} />;
-})(({ theme }) => ({
+})(({ theme, expand }) => ({
   marginLeft: "auto",
   transition: theme.transitions.create("transform", {
     duration: theme.transitions.duration.shortest,
   }),
-  variants: [
-    {
-      props: ({ expand }) => !expand,
-      style: {
-        transform: "rotate(0deg)",
-      },
-    },
-    {
-      props: ({ expand }) => !!expand,
-      style: {
-        transform: "rotate(180deg)",
-      },
-    },
-  ],
+  transform: expand ? "rotate(180deg)" : "rotate(0deg)", // Use `expand` to control rotation
 }));
 
 export default function PostDetails({
